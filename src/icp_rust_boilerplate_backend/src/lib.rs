@@ -133,6 +133,13 @@ enum Error {
 // Implement CRUD operations for properties
 #[ic_cdk::update]
 fn add_property(address: String, property_type: PropertyType, description: String) -> Result<Property, Error> {
+    // Ensure input fields are not empty
+    if address.is_empty() || description.is_empty() {
+        return Err(Error::InvalidInput {
+            msg: "Address or description cannot be empty".to_string(),
+        });
+    }
+
     let id = ID_COUNTER
         .with(|counter| {
             let current_value = *counter.borrow().get();
@@ -151,6 +158,7 @@ fn add_property(address: String, property_type: PropertyType, description: Strin
     Ok(property)
 }
 
+
 #[ic_cdk::update]
 fn delete_property(id: u64) -> Result<(), Error> {
     match PROPERTY_STORAGE.with(|storage| storage.borrow_mut().remove(&id)) {
@@ -164,6 +172,14 @@ fn delete_property(id: u64) -> Result<(), Error> {
 // Implement CRUD operations for lease agreements
 #[ic_cdk::update]
 fn create_lease_agreement(property_id: u64, tenant_id: u64, start_date: u64, end_date: u64) -> Result<LeaseAgreement, Error> {
+
+    // Ensure input fields are valid
+    if start_date >= end_date {
+        return Err(Error::InvalidInput {
+            msg: "Start date must be before end date".to_string(),
+        });
+    }
+
     let id = ID_COUNTER
         .with(|counter| {
             let current_value = *counter.borrow().get();
@@ -256,6 +272,14 @@ fn get_tenant(id: u64) -> Result<Tenant, Error> {
 // Implement update operation for properties
 #[ic_cdk::update]
 fn update_property(id: u64, address: String, property_type: PropertyType, description: String) -> Result<Property, Error> {
+
+     // Ensure input fields are not empty
+     if address.is_empty() || description.is_empty() {
+        return Err(Error::InvalidInput {
+            msg: "Address or description cannot be empty".to_string(),
+        });
+    }
+
     match PROPERTY_STORAGE.with(|storage| {
         let mut storage = storage.borrow_mut();
         if let Some(property) = storage.get(&id) {
@@ -288,6 +312,14 @@ fn update_lease_agreement(
     start_date: u64,
     end_date: u64,
 ) -> Result<LeaseAgreement, Error> {
+
+    // Ensure input fields are valid
+    if start_date >= end_date {
+        return Err(Error::InvalidInput {
+            msg: "Start date must be before end date".to_string(),
+        });
+    }
+
     match LEASE_AGREEMENT_STORAGE.with(|storage| {
         let mut storage = storage.borrow_mut();
         if let Some(lease_agreement) = storage.get(&id) {
@@ -335,6 +367,8 @@ fn update_tenant(id: u64, name: String) -> Result<Tenant, Error> {
         Err(e) => Err(e),
     }
 }
+
+
 
 // Export the Candid interface
 ic_cdk::export_candid!();
